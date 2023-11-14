@@ -9,16 +9,22 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Machine Ageing Rates
+Take care of some business first and make sure the necessary library is loaded.
+```{r funcs, echo=FALSE}
+library(tidyverse)
+```
+
+# Machine Ageing Rates
 
 This is a sandbox example that uses some real-world data that was collected from 9/28/2016 to 9/27/2018. The plotting and functions know-how are from the last R class I took. The GitHub version control and RMarkdown are from this class.
 
-```{r funcs, echo=FALSE}
-library(tidyverse)
+## Define some functions:
 
-# functions first
+### ReadWarrantyData(filename)
+reads in the specified CSV file into a tibble.
+```{r funcReadWarrantyData, echo=FALSE}
 
-################################################################################
+# Read in the CSV file
 ReadWarrantyData <- function(fn) {
   X <- read_csv(fn, col_types = list(
     'MachineAge' = col_double(), # machine age in calendar days
@@ -38,8 +44,12 @@ ReadWarrantyData <- function(fn) {
   print(paste("Loaded", numRowsLoaded, "rows from", fn))
   return(X)
 }
+```
 
-################################################################################
+### DecimateData(data, fraction)
+takes a *random sample* of the raw data and puts a fraction of it into a new data structure
+```{r func_DecimateData, echo=FALSE}
+
 DecimateData <- function(X, fraction) {
   rowsInit <- nrow(X)
   rowsRemain <- round(rowsInit * fraction, -2)
@@ -47,8 +57,13 @@ DecimateData <- function(X, fraction) {
   print(paste("Sliced data down from", rowsInit, "to", rowsRemain, "points."))
   return(Xd)
 }
+```
 
-################################################################################
+### CreateHrVsAgeLinPlot(data, x-limit, y-limit)
+Creatse a plot with linear scales, labels, colors, etc. It groups the data by customer type
+
+```{r func_CreateHrVsAgeLinPlot, echo=FALSE}
+
 CreateHrVsAgeLinPlot <- function(d, lx, ly) {
   # Create linear scale plot
   
@@ -88,42 +103,39 @@ CreateHrVsAgeLinPlot <- function(d, lx, ly) {
     ylim = c(1, ly)
   )
 
-  #scPlot <- scPlot + coord_trans(
-  #  x = "log10", # use "identity" for linear scale
-  #  y = "log10",
-  #  xlim = c(10, lx), 
-  #  ylim = c(1, ly)
-  #)
-  
-  print(scPlot)
-  print("Plotted data.")
+  #print(scPlot)
+  print("Created plot")
   return(scPlot)
 }
 ```
 
-```{r setup, echo=FALSE}
+## Main Program
+### Setup what to do...
 
-```
+The following lines set some **parameters** to pass to the functions.
 
-
-## Setup what to do...
-
-The following lines set some parameters to pass to the functions.
-
-```{r plotting, echo=FALSE}
+```{r plotting, echo=TRUE}
 # Parameters to tweak
-file2load <- "./Data/HoursVsAge.csv"
+file2load <- "../Data/HoursVsAge.csv"
 pts2Plot <- 0.05  # fraction of points to plot (0.0 to 1.0)
 limY <- 2000  # upper graph limit for hr/wk lines
 limX <- 1000  # upper graph limit for hr/wk lines
 ```
 
-Now that everything is defined and initialized, read the data and plot a sample of it.
+Now that everything is defined and initialized, 
 
-```{r actualProgram, echo=TRUE}
+- **read the data**
+
+```{r actualProgram, echo=FALSE}
 hva <- ReadWarrantyData(file2load)
-plotData <- select(DecimateData(hva, pts2Plot), MachineAge, hourReading, CustType)
-CreateHrVsAgeLinPlot(plotData, limX, limY)
-
 ```
 
+- take a random *sample* of the data
+```{r sampleTheData, echo=FALSE}
+plotData <- select(DecimateData(hva, pts2Plot), MachineAge, hourReading, CustType)
+```
+
+- and then *plot* it
+```{r plotIt, echo=FALSE}
+CreateHrVsAgeLinPlot(plotData, limX, limY)
+```
